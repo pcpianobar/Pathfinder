@@ -42,75 +42,52 @@ public class AStarPathFinder : MonoBehaviour
 
 	IEnumerator FindPath (bool targetCellMustBeFree)
 	{
-		bool keepsearching = true;
-		bool pathExits = true;
-
-		while (keepsearching && pathExits)
+		Cell currentNode = null;
+		while (openList.Count > 0)
 		{
 			yield return new WaitForSeconds(0.1f);
 
-			Cell currentNode = ExtractBestNodeFromOpenList ();
-			if (currentNode == null)
-			{
-				pathExits = false;
-				break;
-			}
+			currentNode = ExtractBestNodeFromOpenList ();
 			closedList.Add (currentNode);
 
-			if (end.Equals (currentNode))
-			{
-				keepsearching = false;
-			}
-			else
-			{
-				foreach (Cell neighbour in currentNode.neighbour)
-				{
-					if (neighbour == null) continue;
-					if (!neighbour.IsWalkable ()) continue;
-					if (closedList.Contains (neighbour)) continue;
-					PrepareNewNodeFrom (currentNode, neighbour);
-					neighbour.SetColorFlagSearched ();
+			if (end.Equals (currentNode)) break;
 
-					if (!openList.Contains (neighbour)) 
-					{
-						openList.Add (neighbour);
-					}
-					else
-					{
+			foreach (Cell neighbour in currentNode.neighbour)
+			{
+				if (neighbour == null) continue;
+				if (!neighbour.IsWalkable ()) continue;
+				if (closedList.Contains (neighbour)) continue;
+				CalcCost (currentNode, neighbour);
+				neighbour.SetColorFlagSearched ();
+
+				if (!openList.Contains (neighbour)) 
+				{
+					openList.Add (neighbour);
+				}
+				else
+				{
 //						if (neighbour.G < inOpenList.G) 
 //						{
 //							inOpenList.G = neighbour.G;
 //							inOpenList.F = inOpenList.G + inOpenList.H;
 //							inOpenList.parent = currentNode;
 //						}
-					}
 				}
 			}
 
-			if (pathExits)
-			{
-				Cell n = end;
-				while (n != null)
-				{
-					finalPath.Add (n);
-					n.SetColorFlagPath ();
-					n = n.parent;
-					yield return new WaitForSeconds(0.05f);
-				}
-			}
+			currentNode = null;
 		}
-	}
 
-	public List<int> PointsFromPath ()
-	{
-		List<int> points = new List<int> ();
-		foreach (Cell n in finalPath)
+		if (currentNode != null)
 		{
-			points.Add (n.x);
-			points.Add (n.y);
+			Cell n = end;
+			while (n != null)
+			{
+				finalPath.Add (n);
+				n.SetColorFlagPath ();
+				n = n.parent;
+			}
 		}
-
-		return points;
 	}
 
 	Cell ExtractBestNodeFromOpenList ()
@@ -134,8 +111,13 @@ public class AStarPathFinder : MonoBehaviour
 		return bestOne;
 	}
 
-	void PrepareNewNodeFrom(Cell n, Cell neigbour) {
-		neigbour.G = n.G + MovementCost(n, neigbour);
+	void CalcCost (Cell n, Cell neigbour) {
+		neigbour.G = n.G + neigbour.MovementCost ();
+		if (n.parent != null)
+		{
+			if (n.parent.x != neigbour.x) neigbour.G += 10000;
+			if (n.parent.y != neigbour.y) neigbour.G += 10000;
+		}
 		neigbour.H = Heuristic(neigbour);
 		neigbour.F = neigbour.G + neigbour.H;
 		neigbour.parent = n;
@@ -143,10 +125,6 @@ public class AStarPathFinder : MonoBehaviour
 	
 	float Heuristic (Cell n) {
 		return Mathf.Sqrt((n.x - end.x)*(n.x - end.x) + (n.y - end.y)*(n.y - end.y));
-	}
-	
-	float MovementCost(Cell a, Cell b) {
-		return map [b.x, b.y].MovementCost ();
 	}
 }
 
