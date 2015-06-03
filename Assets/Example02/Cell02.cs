@@ -5,7 +5,7 @@ public class Cell02 : MonoBehaviour {
 
 	public enum Type
 	{
-		Clear,
+		Road,
 		Wall,
 		Start,
 		Goal,
@@ -18,9 +18,7 @@ public class Cell02 : MonoBehaviour {
 
 	public void Reset ()
 	{
-		if (type != Type.Wall) {
-			SetColorFlagClear ();
-		}
+		SetColorFlagRoad ();
 	}
 	
 	public void SetColorFlagWall ()
@@ -41,26 +39,26 @@ public class Cell02 : MonoBehaviour {
 		type = Type.Goal;
 	}
 
-	public void SetColorFlagClear ()
+	public void SetColorFlagRoad ()
 	{
 		GetComponent<Renderer>().material.color = Color.white;
-		type = Type.Clear;
+		type = Type.Road;
 	}
 
 	public void SetColorFlagSearched ()
 	{
-		if (type != Type.Clear) return;
+		if (type != Type.Road) return;
 		GetComponent<Renderer>().material.color = Color.green;
 	}
 
 	public void SetColorFlagPath ()
 	{
-		if (type != Type.Clear) return;
+		if (type != Type.Road) return;
 		GetComponent<Renderer>().material.color = Color.gray;
 	}
 
 	public bool IsWalkable ()
 	{
-		return type == Type.Clear || type == Type.Start || type == Type.Goal;
+		return type == Type.Road || type == Type.Start || type == Type.Goal;
 	}
 }

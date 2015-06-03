@@ -6,7 +6,7 @@ namespace AStar
 	public interface IShortestPath<State> {
 		List<State> Expand (State position);
 		float Heuristic (State from, State to);
-		float ActualCost (State from, State to);
+		float ActualCost (State parent, State from, State to);
 	}
 
 	public class PathFinder<State> {
@@ -15,6 +15,7 @@ namespace AStar
 			public T state;
 			public float g; // cost
 			public float f; // estimate
+			public float h;
 			public Node(Node<T> parent, float g, float f, T state)
 			{
 				this.parent = parent;
@@ -28,62 +29,75 @@ namespace AStar
 				return this.f.CompareTo (other.f);
 			}
 		}
-		
+
+		public Action<State> onTravelState;
 		private IShortestPath<State> info;
 		public PathFinder(IShortestPath<State> info){
 			this.info = info;
 		}
+
 		public List<State> Travel (State fromState, State toState)
 		{
-			PriorityQueue<float,Node<State>> frontier = new PriorityQueue<float,Node<State>>();
-			HashSet<State> exploredSet = new HashSet<State>();
-			Dictionary<State, Node<State>> frontierMap = new Dictionary<State, Node<State>>();
+			PriorityQueue<float,Node<State>> openList = new PriorityQueue<float,Node<State>>();
+			HashSet<State> closedList = new HashSet<State>();
+			Dictionary<State, Node<State>> openStateMap = new Dictionary<State, Node<State>>();
 			Node<State> startNode = new Node<State>(null,0,0,fromState);
 			
-			frontier.Enqueue(startNode,0);
-			frontierMap.Add(fromState, startNode);
+			openList.Enqueue(startNode, 0);
+			openStateMap.Add(fromState, startNode);
 			
-			while (true)
+			while (!openList.IsEmpty)
 			{
-				if (frontier.IsEmpty) return null;
-				
-				Node<State> node = frontier.Dequeue();
-				if (node.state.Equals(toState)) return BuildSolution(node);
-				
-				exploredSet.Add(node.state);
+				Node<State> node = openList.Dequeue();
+				if (node.state.Equals(toState)) return BuildShortestPath (node);
+
+				closedList.Add(node.state);
 				foreach (State neighbourState in info.Expand(node.state))
 				{
-					Node<State> frontierNode = null;
-					bool isNodeInFrontier = frontierMap.TryGetValue(neighbourState, out frontierNode);
-					if (!exploredSet.Contains(neighbourState) && !isNodeInFrontier)
+					Node<State> neighbourNode = null;
+					bool isAlreadyNode = openStateMap.TryGetValue(neighbourState, out neighbourNode);
+					if (!closedList.Contains(neighbourState) && !isAlreadyNode)
 					{
 						Node<State> searchNode = CreateNode(node, neighbourState, toState);
-						frontier.Enqueue(searchNode,searchNode.f);
-						exploredSet.Add(neighbourState);
-					} else if (isNodeInFrontier) {
+						openList.Enqueue(searchNode,searchNode.f);
+						openStateMap.Add(neighbourState, searchNode);
+
+						if (onTravelState != null) onTravelState (neighbourState);
+					} 
+					else if (isAlreadyNode)
+					{
 						Node<State> searchNode = CreateNode(node, neighbourState, toState);
-						if (frontierNode.f>searchNode.f){
-							frontier.Replace(frontierNode,frontierNode.f, searchNode.f);
+						if (neighbourNode.g>searchNode.g){
+							openList.Replace(neighbourNode,neighbourNode.f, searchNode.f);
 						}
 					}
 				}
 			}
+			return null;
 		}
 
 		private Node<State> CreateNode(Node<State> node, State child, State toState)
 		{
-			float cost = info.ActualCost(node.state, child);
+			State parent = (node.parent != null) ? node.parent.state : default(State);
+			float cost = info.ActualCost(parent, node.state, child);
+			UnityEngine.Debug.Log (string.Format ("{0} = {1}(cost)", child.ToString (), cost));
 			float heuristic = info.Heuristic(child, toState);
-			return new Node<State>(node, node.g+cost,node.g+cost+heuristic,child);
+			return new Node<State>(node, node.g+cost, node.g+cost+heuristic,child);
 		}
 
-		private List<State> BuildSolution(Node<State> seachNode){
+		private List<State> BuildShortestPath(Node<State> seachNode)
+		{
+			float totalCost = 0;
 			List<State> list = new List<State>();
 			while (seachNode != null)
 			{
+				totalCost += seachNode.f;
 				list.Insert(0, seachNode.state);
 				seachNode = seachNode.parent;
 			}
+
+			UnityEngine.Debug.Log ("Total Cost = " + totalCost);
+
 			return list;
 		}
 	}
