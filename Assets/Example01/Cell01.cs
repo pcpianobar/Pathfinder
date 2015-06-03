@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Cell : MonoBehaviour, System.IComparable<Cell> {
+public class Cell01 : MonoBehaviour, System.IComparable<Cell01> {
 
 	public enum Type
 	{
 		Clear,
 		Wall,
+		Start,
+		Goal,
 	}
 
 	public Vector2 coordinate;
@@ -14,8 +16,8 @@ public class Cell : MonoBehaviour, System.IComparable<Cell> {
 
 	public int x;
 	public int y;
-	public Cell[] neighbour = new Cell[4];
-	public Cell parent;
+	public Cell01[] neighbour = new Cell01[4];
+	public Cell01 parent;
 
 	public float F;
 	public float G;
@@ -39,13 +41,13 @@ public class Cell : MonoBehaviour, System.IComparable<Cell> {
 	public void SetColorFlagStart ()
 	{
 		GetComponent<Renderer>().material.color = Color.blue;
-		type = Type.Clear;
+		type = Type.Start;
 	}
 
 	public void SetColorFlagGoal ()
 	{
 		GetComponent<Renderer>().material.color = Color.yellow;
-		type = Type.Clear;
+		type = Type.Goal;
 	}
 
 	public void SetColorFlagClear ()
@@ -56,22 +58,19 @@ public class Cell : MonoBehaviour, System.IComparable<Cell> {
 
 	public void SetColorFlagSearched ()
 	{
+		if (type != Type.Clear) return;
 		GetComponent<Renderer>().material.color = Color.green;
 	}
 
 	public void SetColorFlagPath ()
 	{
+		if (type != Type.Clear) return;
 		GetComponent<Renderer>().material.color = Color.gray;
 	}
 
 	public bool IsWalkable ()
 	{
-		return type == Type.Clear;
-	}
-
-	public int MovementCost ()
-	{
-		return 1;
+		return type == Type.Clear || type == Type.Start || type == Type.Goal;
 	}
 
 	public override int GetHashCode()
@@ -82,18 +81,18 @@ public class Cell : MonoBehaviour, System.IComparable<Cell> {
 	public override bool Equals (System.Object other)
 	{
 		if (other == null) return false;
-		Cell otherCell = other as Cell;
+		Cell01 otherCell = other as Cell01;
 		if (otherCell == null) return false;
 
 		return (x == otherCell.x) && (y == otherCell.y);
 	}
 
-	public bool Equals (Cell other)
+	public bool Equals (Cell01 other)
 	{
 		return Equals ((System.Object)other);
 	}
 
-	public int CompareTo(Cell other)
+	public int CompareTo(Cell01 other)
 	{
 		return this.F.CompareTo (other.F);
 	}

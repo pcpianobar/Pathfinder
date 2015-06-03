@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class MapGenerator : MonoBehaviour {
+public class ExampleController01 : MonoBehaviour {
 
-	private Cell[,] blockMap;
+	private Cell01[,] blockMap;
 	public int width;
 	public int height;
 	public GameObject blockPrefab;
@@ -17,8 +17,8 @@ public class MapGenerator : MonoBehaviour {
 		Wall,
 	}
 
-	Cell startBlock;
-	Cell goalBlock;
+	Cell01 startBlock;
+	Cell01 goalBlock;
 	Command currentCmd;
 	AStarPathFinder pathFinder;
 
@@ -39,7 +39,7 @@ public class MapGenerator : MonoBehaviour {
 			{
 				if (hit.collider != null)
 				{
-					Cell pickedBlock = hit.collider.GetComponent<Cell> ();
+					Cell01 pickedBlock = hit.collider.GetComponent<Cell01> ();
 					switch (currentCmd)
 					{
 					case Command.Start:
@@ -90,7 +90,7 @@ public class MapGenerator : MonoBehaviour {
 
 	void Generate ()
 	{
-		blockMap = new Cell[width, height];
+		blockMap = new Cell01[width, height];
 		for (int y=0; y<height; y++)
 		{
 			for (int x=0; x<width; x++)
@@ -99,7 +99,7 @@ public class MapGenerator : MonoBehaviour {
 				blockObject.name = string.Format ("Cell_{0}x{1}", x, y);
 				blockObject.transform.SetParent (transform);
 				blockObject.transform.position = new Vector3 ((float)-width * 0.5f + x + 0.5f, (float)-height * 0.5f + y + 0.5f, 0);
-				Cell block = blockObject.GetComponent<Cell> ();
+				Cell01 block = blockObject.GetComponent<Cell01> ();
 				block.coordinate = new Vector2 (x, y);
 				block.x = x;
 				block.y = y;
@@ -110,7 +110,7 @@ public class MapGenerator : MonoBehaviour {
 		int[,] pathConsts = {
 			{-1,0}, {1, 0}, {0, -1}, {0, 1}
 		};
-		foreach (Cell block in blockMap)
+		foreach (Cell01 block in blockMap)
 		{
 			for (int i=0; i<pathConsts.GetLength (0); i++)
 			{
