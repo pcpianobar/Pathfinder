@@ -10,8 +10,6 @@ public class AStarPathFinder : MonoBehaviour
 	Cell start;
 	Cell end;
 
-	Cell[,] map;
-
 	public AStarPathFinder ()
 	{
 		openList = new List<Cell> ();
@@ -25,9 +23,9 @@ public class AStarPathFinder : MonoBehaviour
 		closedList.Clear ();
 		finalPath.Clear ();
 
-		this.map = map;
 		foreach (var cell in map)
 		{
+			if (startCell.Equals (cell) || goalCell.Equals (cell)) continue;
 			cell.Reset ();
 		}
 		
@@ -45,7 +43,7 @@ public class AStarPathFinder : MonoBehaviour
 		Cell currentNode = null;
 		while (openList.Count > 0)
 		{
-			yield return new WaitForSeconds(0.1f);
+			yield return null;
 
 			currentNode = ExtractBestNodeFromOpenList ();
 			closedList.Add (currentNode);
@@ -58,11 +56,18 @@ public class AStarPathFinder : MonoBehaviour
 				if (!neighbour.IsWalkable ()) continue;
 				if (closedList.Contains (neighbour)) continue;
 				CalcCost (currentNode, neighbour);
-				neighbour.SetColorFlagSearched ();
+				if (!start.Equals (neighbour) && !end.Equals (neighbour)) {
+					neighbour.SetColorFlagSearched ();
+				}
 
 				if (!openList.Contains (neighbour)) 
 				{
 					openList.Add (neighbour);
+//					openList.Sort ((a, b) => {
+//						if (a.F < b.F) return -1;
+//						else if (a.F > b.F) return 1;
+//						return 0;
+//					});
 				}
 				else
 				{
@@ -84,7 +89,9 @@ public class AStarPathFinder : MonoBehaviour
 			while (n != null)
 			{
 				finalPath.Add (n);
-				n.SetColorFlagPath ();
+				if (!start.Equals (n) && !end.Equals (n)) {
+					n.SetColorFlagPath ();
+				}
 				n = n.parent;
 			}
 		}
@@ -113,11 +120,10 @@ public class AStarPathFinder : MonoBehaviour
 
 	void CalcCost (Cell n, Cell neigbour) {
 		neigbour.G = n.G + neigbour.MovementCost ();
-		if (n.parent != null)
-		{
-			if (n.parent.x != neigbour.x) neigbour.G += 10000;
-			if (n.parent.y != neigbour.y) neigbour.G += 10000;
-		}
+//		if (n.parent != null)
+//		{
+//			if (n.parent.x != neigbour.x && n.parent.y != neigbour.y) neigbour.G += 10000;
+//		}
 		neigbour.H = Heuristic(neigbour);
 		neigbour.F = neigbour.G + neigbour.H;
 		neigbour.parent = n;

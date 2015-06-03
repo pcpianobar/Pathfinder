@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System;
 
-public class Cell : MonoBehaviour, IEquatable<Cell> {
+public class Cell : MonoBehaviour, System.IComparable<Cell> {
 
 	public enum Type
 	{
@@ -77,10 +76,10 @@ public class Cell : MonoBehaviour, IEquatable<Cell> {
 
 	public override int GetHashCode()
 	{
-		return base.GetHashCode ();
+		return x ^ y;
 	}
 
-	public override bool Equals (object other)
+	public override bool Equals (System.Object other)
 	{
 		if (other == null) return false;
 		Cell otherCell = other as Cell;
@@ -91,6 +90,11 @@ public class Cell : MonoBehaviour, IEquatable<Cell> {
 
 	public bool Equals (Cell other)
 	{
-		return this.Equals (other);
+		return Equals ((System.Object)other);
+	}
+
+	public int CompareTo(Cell other)
+	{
+		return this.F.CompareTo (other.F);
 	}
 }
