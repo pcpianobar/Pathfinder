@@ -2,15 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
-
+public class ExampleController04 : MonoBehaviour, RectilinearPath.IShortestPath<Cell02> {
+	
 	private Cell02[,] blockMap;
 	public int width;
 	public int height;
 	public GameObject blockPrefab;
 	[Range(0, 1)]
 	public float debugSpeed = 0.1f;
-
+	
 	enum Command
 	{
 		Start,
@@ -22,15 +22,15 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 	Cell02 startBlock;
 	Cell02 goalBlock;
 	Command currentCmd;
-	AStar.PathFinder<Cell02> pathFinder;
+	RectilinearPath.PathFinder<Cell02> pathFinder;
 	List<Cell02> traveledList = new List<Cell02> ();
 	// Use this for initialization
 	void Start () {
-		pathFinder = new AStar.PathFinder<Cell02> (this);
+		pathFinder = new RectilinearPath.PathFinder<Cell02> (this);
 		pathFinder.onTravelState = (state) => {
 			traveledList.Add (state);
 		};
-
+		
 		Generate ();
 	}
 	
@@ -47,7 +47,7 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 			}
 		}
 	}
-
+	
 	void SetCellFlag (Cell02 cell)
 	{
 		switch (currentCmd)
@@ -103,7 +103,7 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 				if (cell.type == Cell02.Type.Start || cell.type == Cell02.Type.Goal || cell.type == Cell02.Type.Wall) continue;
 				cell.Reset ();
 			}
-
+			
 			traveledList.Clear ();
 			List<Cell02> path = pathFinder.Travel (startBlock, goalBlock);
 			if (path != null)
@@ -112,7 +112,7 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 			}
 		}
 	}
-
+	
 	IEnumerator DrawDebug (List<Cell02> path)
 	{
 		foreach (Cell02 cell in traveledList)
@@ -126,7 +126,7 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 			cell.SetColorFlagPath ();
 		}
 	}
-
+	
 	void Generate ()
 	{
 		blockMap = new Cell02[width, height];
@@ -144,14 +144,14 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 				blockMap[x, y] = block;
 			}
 		}
-
+		
 		startBlock = blockMap[0,0];
 		goalBlock = blockMap[width-1,height-1];
-
+		
 		startBlock.SetColorFlagStart ();
 		goalBlock.SetColorFlagGoal ();
 	}
-
+	
 	public List<Cell02> Expand (Cell02 position)
 	{
 		List<Cell02> neighbourList = new List<Cell02> ();
@@ -163,28 +163,28 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 			int neighbourX = position.x+pathConsts[i,0];
 			int neighbourY = position.y+pathConsts[i,1];
 			if (0 > neighbourX || neighbourX >= width || 0 > neighbourY || neighbourY >= height) continue;
-
+			
 			Cell02 cell = blockMap[neighbourX, neighbourY];
 			if (!cell.IsWalkable ()) continue;
 			neighbourList.Add (cell);
 		}
-
+		
 		return neighbourList;
 	}
-
+	
 	public float Heuristic (Cell02 from, Cell02 to)
 	{
-//		return Mathf.Sqrt((from.x - to.x)*(from.x - to.x) + (from.y - to.y)*(from.y - to.y));
+		//		return Mathf.Sqrt((from.x - to.x)*(from.x - to.x) + (from.y - to.y)*(from.y - to.y));
 		return Mathf.Abs(from.x - to.x) + Mathf.Abs(from.y - to.y);
 	}
-
-	public float ActualCost (Cell02 parent, Cell02 from, Cell02 to)
+	
+	public int ActualCost (Cell02 parent, Cell02 from, Cell02 to)
 	{
-		float cost = 1;
-//		if (parent != null)
-//		{
-//			if (parent.x != to.x && parent.y != to.y) cost = 10000;
-//		}
+		int cost = 0;
+		if (parent != null)
+		{
+			if (parent.x != to.x && parent.y != to.y) cost = 1;
+		}
 		return cost;
 	}
 }

@@ -1,21 +1,22 @@
+﻿using System;
 using System.Collections.Generic;
-using System;
 
-namespace AStar
+namespace DFS
 {
-	public interface IShortestPath<State> {
+	public interface IShortestPath<State> 
+	{
 		List<State> Expand (State position);
 		float Heuristic (State from, State to);
 		float ActualCost (State parent, State from, State to);
 	}
-
+	
 	public class PathFinder<State> {
 		class Node<T> : IComparable< Node<T>> {
 			public Node<T> parent;
 			public T state;
 			public float g; // cost
 			public float f; // estimate
-
+			
 			public Node(Node<T> parent, float g, float f, T state)
 			{
 				this.parent = parent;
@@ -28,71 +29,55 @@ namespace AStar
 			{
 				return this.f.CompareTo (other.f);
 			}
-
+			
 			public override string ToString ()
 			{
 				if (parent == null) return string.Format ("{0}({1} g({2}), f({3})", state, null, g, f);
 				return string.Format ("{0}({1}) g({2}), f({3})", state, parent.state, g, f);
 			}
 		}
-
+		
 		public Action<State> onTravelState;
 		private IShortestPath<State> info;
 		public PathFinder(IShortestPath<State> info){
 			this.info = info;
 		}
-
+		
 		public List<State> Travel (State fromState, State toState)
 		{
-			PriorityQueue<float,Node<State>> openList = new PriorityQueue<float,Node<State>>();
-			HashSet<State> closedList = new HashSet<State>();
-			Dictionary<State, Node<State>> openStateMap = new Dictionary<State, Node<State>>();
+			List<State> closedList = new List<State> ();
+			Stack<Node<State>> openList = new Stack<Node<State>>();
 			Node<State> startNode = new Node<State>(null,0,0,fromState);
 			
-			openList.Enqueue(startNode, 0);
-			openStateMap.Add(fromState, startNode);
-			
-			while (!openList.IsEmpty)
+			openList.Push (startNode);
+
+			while (openList.Count > 0)
 			{
-				Node<State> node = openList.Dequeue();
+				Node<State> node = openList.Pop ();
 				if (node.state.Equals(toState)) return BuildShortestPath (node);
 
-				closedList.Add(node.state);
+				closedList.Add (node.state);
 				foreach (State neighbourState in info.Expand(node.state))
 				{
-					Node<State> neighbourNode = null;
-					bool isAlreadyNode = openStateMap.TryGetValue(neighbourState, out neighbourNode);
-					if (!closedList.Contains(neighbourState) && !isAlreadyNode)
-					{
-						Node<State> searchNode = CreateNode(node, neighbourState, toState);
-						openList.Enqueue(searchNode,searchNode.f);
-						openStateMap.Add(neighbourState, searchNode);
+					if (closedList.Contains (neighbourState)) continue;
 
-						if (onTravelState != null) onTravelState (neighbourState);
-					} 
-					else if (isAlreadyNode)
-					{
-						Node<State> searchNode = CreateNode(node, neighbourState, toState);
-						if (neighbourNode.g>searchNode.g){
-							openList.Replace(neighbourNode, searchNode, neighbourNode.f, searchNode.f);
-							openStateMap[neighbourState] = searchNode;
-						}
-					}
+					Node<State> searchNode = CreateNode(node, neighbourState, toState);
+					openList.Push (searchNode);
+					if (onTravelState != null) onTravelState (neighbourState);
 				}
-				UnityEngine.Debug.Log (openList.ToString ());
 			}
 			return null;
 		}
-
+		
 		private Node<State> CreateNode(Node<State> node, State child, State toState)
 		{
 			State parent = (node.parent != null) ? node.parent.state : default(State);
 			float cost = info.ActualCost(parent, node.state, child);
-
+			
 			float heuristic = info.Heuristic(child, toState);
 			return new Node<State>(node, node.g+cost, node.g+cost+heuristic,child);
 		}
-
+		
 		private List<State> BuildShortestPath(Node<State> seachNode)
 		{
 			List<State> list = new List<State>();
@@ -101,11 +86,11 @@ namespace AStar
 				list.Insert(0, seachNode.state);
 				seachNode = seachNode.parent;
 			}
-
+			
 			return list;
 		}
 	}
-
+	
 	public class PriorityQueue<P, V>
 	{
 		private SortedDictionary<P, LinkedList<V>> list = new SortedDictionary<P, LinkedList<V>>();
