@@ -61,4 +61,9 @@ public class Cell02 : MonoBehaviour {
 	{
 		return type == Type.Road || type == Type.Start || type == Type.Goal;
 	}
+
+	public override string ToString ()
+	{
+		return gameObject.name;
+	}
 }

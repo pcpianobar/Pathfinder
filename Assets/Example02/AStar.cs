@@ -15,7 +15,7 @@ namespace AStar
 			public T state;
 			public float g; // cost
 			public float f; // estimate
-			public float h;
+
 			public Node(Node<T> parent, float g, float f, T state)
 			{
 				this.parent = parent;
@@ -27,6 +27,12 @@ namespace AStar
 			public int CompareTo(Node<T> other)
 			{
 				return this.f.CompareTo (other.f);
+			}
+
+			public override string ToString ()
+			{
+				if (parent == null) return string.Format ("{0}({1} g({2}), f({3})", state, null, g, f);
+				return string.Format ("{0}({1}) g({2}), f({3})", state, parent.state, g, f);
 			}
 		}
 
@@ -68,7 +74,7 @@ namespace AStar
 					{
 						Node<State> searchNode = CreateNode(node, neighbourState, toState);
 						if (neighbourNode.g>searchNode.g){
-							openList.Replace(neighbourNode,neighbourNode.f, searchNode.f);
+							openList.Replace(neighbourNode, searchNode, neighbourNode.f, searchNode.f);
 						}
 					}
 				}
@@ -80,23 +86,19 @@ namespace AStar
 		{
 			State parent = (node.parent != null) ? node.parent.state : default(State);
 			float cost = info.ActualCost(parent, node.state, child);
-			UnityEngine.Debug.Log (string.Format ("{0} = {1}(cost)", child.ToString (), cost));
+
 			float heuristic = info.Heuristic(child, toState);
 			return new Node<State>(node, node.g+cost, node.g+cost+heuristic,child);
 		}
 
 		private List<State> BuildShortestPath(Node<State> seachNode)
 		{
-			float totalCost = 0;
 			List<State> list = new List<State>();
 			while (seachNode != null)
 			{
-				totalCost += seachNode.f;
 				list.Insert(0, seachNode.state);
 				seachNode = seachNode.parent;
 			}
-
-			UnityEngine.Debug.Log ("Total Cost = " + totalCost);
 
 			return list;
 		}
@@ -132,15 +134,15 @@ namespace AStar
 			return res;
 		}
 		
-		public void Replace(V value, P oldPriority, P newPriority){
+		public void Replace(V oldValue, V newValue, P oldPriority, P newPriority){
 			LinkedList<V> v = list[oldPriority];
-			v.Remove(value);
+			v.Remove(oldValue);
 			
 			if (v.Count == 0){ // nothing left of the top priority.
 				list.Remove(oldPriority);
 			}
 			
-			Enqueue(value, newPriority);
+			Enqueue(newValue, newPriority);
 		}
 		
 		public bool IsEmpty
@@ -152,7 +154,7 @@ namespace AStar
 			string res = "";
 			foreach (P key in list.Keys){
 				foreach (V val in list[key]){
-					res += val+", ";
+					res += val +", ";
 				}
 			}
 			return res;

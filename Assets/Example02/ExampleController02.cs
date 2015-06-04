@@ -135,15 +135,21 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 			for (int x=0; x<width; x++)
 			{
 				GameObject blockObject = Instantiate (blockPrefab) as GameObject;
-				blockObject.name = string.Format ("Cell_{0}x{1}", x, y);
+				blockObject.name = string.Format ("Cell{0:00}", y*width+x+1);
 				blockObject.transform.SetParent (transform);
-				blockObject.transform.position = new Vector3 ((float)-width * 0.5f + x + 0.5f, (float)-height * 0.5f + y + 0.5f, 0);
+				blockObject.transform.position = new Vector3 ((float)-width * 0.5f + x + 0.5f, (float)height * 0.5f - (y + 0.5f), 0);
 				Cell02 block = blockObject.GetComponent<Cell02> ();
 				block.x = x;
 				block.y = y;
 				blockMap[x, y] = block;
 			}
 		}
+
+		startBlock = blockMap[0,0];
+		goalBlock = blockMap[width-1,height-1];
+
+		startBlock.SetColorFlagStart ();
+		goalBlock.SetColorFlagGoal ();
 	}
 
 	public List<Cell02> Expand (Cell02 position)
@@ -168,7 +174,8 @@ public class ExampleController02 : MonoBehaviour, AStar.IShortestPath<Cell02> {
 
 	public float Heuristic (Cell02 from, Cell02 to)
 	{
-		return Mathf.Sqrt((from.x - to.x)*(from.x - to.x) + (from.y - to.y)*(from.y - to.y));
+//		return Mathf.Sqrt((from.x - to.x)*(from.x - to.x) + (from.y - to.y)*(from.y - to.y));
+		return Mathf.Abs(from.x - to.x) + Mathf.Abs(from.y - to.y);
 	}
 
 	public float ActualCost (Cell02 parent, Cell02 from, Cell02 to)
